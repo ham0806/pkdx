@@ -17,18 +17,35 @@ data.each do |entry|
   gigantamax = entry['gigantamax'].to_s == '' ? nil : entry['gigantamax']
   pokedex    = entry['pokedex']
 
-  # 新メガの pokedex + pokedex_name 登録
+  # メガの pokedex + pokedex_name 登録（既存行があればUPDATE、なければINSERT）
   if entry['new_pokedex_entry']
     db.execute(
-      'INSERT OR IGNORE INTO pokedex (id, globalNo, form, region, mega_evolution, gigantamax, height, weight) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [id, global_no, form, region, mega_evo, gigantamax, '-', '-']
+      'UPDATE pokedex SET mega_evolution = ? WHERE id = ?',
+      [mega_evo, id]
     )
+    if db.changes == 0
+      db.execute(
+        'INSERT INTO pokedex (id, globalNo, form, region, mega_evolution, gigantamax, height, weight) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [id, global_no, form, region, mega_evo, gigantamax, '-', '-']
+      )
+    end
     [['jpn', entry['new_pokedex_name_jpn']], ['eng', entry['new_pokedex_name_eng']]].each do |lang, name|
       if name
-        db.execute(
-          'INSERT OR IGNORE INTO pokedex_name (id, globalNo, form, region, mega_evolution, gigantamax, language, name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-          [id, global_no, form, region, mega_evo, gigantamax, lang, name]
+        existing = db.get_first_value(
+          'SELECT COUNT(*) FROM pokedex_name WHERE id = ? AND language = ?',
+          [id, lang]
         )
+        if existing.to_i > 0
+          db.execute(
+            'UPDATE pokedex_name SET mega_evolution = ?, name = ? WHERE id = ? AND language = ? AND (COALESCE(mega_evolution, "") = "" OR mega_evolution = ?)',
+            [mega_evo, name, id, lang, mega_evo]
+          )
+        else
+          db.execute(
+            'INSERT INTO pokedex_name (id, globalNo, form, region, mega_evolution, gigantamax, language, name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [id, global_no, form, region, mega_evo, gigantamax, lang, name]
+          )
+        end
       end
     end
   end

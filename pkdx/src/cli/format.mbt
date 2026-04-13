@@ -284,6 +284,7 @@ fn damage_to_json(
     pct_arr = pct_arr + format_pct(r.percents[i])
   }
   pct_arr = pct_arr + "]"
+  let double_field = if input.is_double { ",\"double\":true" } else { "" }
   "{\"attacker\":\"" +
   input.attacker.name_ja +
   "\",\"defender\":\"" +
@@ -302,7 +303,9 @@ fn damage_to_json(
   r.defender_hp.to_string() +
   ",\"ko\":\"" +
   r.ko_text +
-  "\"}"
+  "\"" +
+  double_field +
+  "}"
 }
 
 ///|
@@ -313,7 +316,8 @@ fn damage_to_table(
   let atk = input.attacker
   let dfn = input.defender
   let mv = input.move_
-  let mut s = atk.name_ja + " → " + dfn.name_ja + " (" + mv.name + ")\n"
+  let double_tag = if input.is_double { " [ダブル]" } else { "" }
+  let mut s = atk.name_ja + " → " + dfn.name_ja + " (" + mv.name + ")" + double_tag + "\n"
   s = s + "─".to_string().repeat(50) + "\n"
   // Damage range
   s = s +

@@ -257,6 +257,11 @@ pub fn calc_damage(input : @model.DamageCalcInput) -> @model.DamageCalcResult {
     let rand = 85 + idx
     let mut dmg = damage_base
 
+    // Spread move modifier (double battle, 0.75x)
+    if input.is_double && is_spread_move(move_name) {
+      dmg = round5(dmg, 3072)
+    }
+
     // Weather damage mod
     if weather.is_active() {
       let w_mod = get_weather_damage_mod(weather, move_type)

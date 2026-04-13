@@ -173,7 +173,9 @@
     "ability1": "おやこあい",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガガルーラ",
+    "new_pokedex_name_eng": "Mega Kangaskhan"
   },
   {
     "id": "0121_00000000_0_000_0",
@@ -217,7 +219,9 @@
     "ability1": "ちからもち",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガスターミー",
+    "new_pokedex_name_eng": "Mega Starmie"
   },
   {
     "id": "0127_00000000_0_000_0",
@@ -261,7 +265,9 @@
     "ability1": "スカイスキン",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガカイロス",
+    "new_pokedex_name_eng": "Mega Pinsir"
   },
   {
     "id": "0128_00000000_0_000_0",
@@ -393,7 +399,9 @@
     "ability1": "かたやぶり",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガギャラドス",
+    "new_pokedex_name_eng": "Mega Gyarados"
   },
   {
     "id": "0132_00000000_0_000_0",
@@ -525,7 +533,9 @@
     "ability1": "かたいツメ",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガプテラ",
+    "new_pokedex_name_eng": "Mega Aerodactyl"
   },
   {
     "id": "0143_00000000_0_000_0",
@@ -591,7 +601,9 @@
     "ability1": "マルチスケイル",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガカイリュー",
+    "new_pokedex_name_eng": "Mega Dragonite"
   },
   {
     "id": "0154_00000000_0_000_0",
@@ -635,7 +647,9 @@
     "ability1": "メガソーラー",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガメガニウム",
+    "new_pokedex_name_eng": "Mega Meganium"
   },
   {
     "id": "0157_00000000_0_000_0",
@@ -723,7 +737,9 @@
     "ability1": "てきおうりょく",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガスピアー",
+    "new_pokedex_name_eng": "Mega Beedrill"
   },
   {
     "id": "0160_00000000_0_000_0",
@@ -767,7 +783,9 @@
     "ability1": "ドラゴンスキン",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガオーダイル",
+    "new_pokedex_name_eng": "Mega Feraligatr"
   },
   {
     "id": "0168_00000000_0_000_0",
@@ -833,7 +851,9 @@
     "ability1": "かたやぶり",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガデンリュウ",
+    "new_pokedex_name_eng": "Mega Ampharos"
   },
   {
     "id": "0184_00000000_0_000_0",
@@ -921,7 +941,9 @@
     "ability1": "ノーガード",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガピジョット",
+    "new_pokedex_name_eng": "Mega Pidgeot"
   },
   {
     "id": "0196_00000000_0_000_0",
@@ -1075,7 +1097,9 @@
     "ability1": "すなのちから",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガハガネール",
+    "new_pokedex_name_eng": "Mega Steelix"
   },
   {
     "id": "0212_00000000_0_000_0",
@@ -1119,7 +1143,9 @@
     "ability1": "テクニシャン",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガハッサム",
+    "new_pokedex_name_eng": "Mega Scizor"
   },
   {
     "id": "0214_00000000_0_000_0",
@@ -1163,7 +1189,9 @@
     "ability1": "スキルリンク",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガヘラクロス",
+    "new_pokedex_name_eng": "Mega Heracross"
   },
   {
     "id": "0227_00000000_0_000_0",
@@ -1207,7 +1235,9 @@
     "ability1": "すじがねいり",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガエアームド",
+    "new_pokedex_name_eng": "Mega Skarmory"
   },
   {
     "id": "0229_00000000_0_000_0",
@@ -1251,7 +1281,9 @@
     "ability1": "サンパワー",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガヘルガー",
+    "new_pokedex_name_eng": "Mega Houndoom"
   },
   {
     "id": "0248_00000000_0_000_0",
@@ -1295,7 +1327,9 @@
     "ability1": "すなおこし",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガバンギラス",
+    "new_pokedex_name_eng": "Mega Tyranitar"
   },
   {
     "id": "0024_00000000_0_000_0",
@@ -1449,7 +1483,9 @@
     "ability1": "フェアリースキン",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガサーナイト",
+    "new_pokedex_name_eng": "Mega Gardevoir"
   },
   {
     "id": "0302_00000000_0_000_0",
@@ -1493,7 +1529,9 @@
     "ability1": "マジックミラー",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガヤミラミ",
+    "new_pokedex_name_eng": "Mega Sableye"
   },
   {
     "id": "0306_00000000_0_000_0",
@@ -1537,7 +1575,9 @@
     "ability1": "フィルター",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガボスゴドラ",
+    "new_pokedex_name_eng": "Mega Aggron"
   },
   {
     "id": "0308_00000000_0_000_0",
@@ -1581,7 +1621,9 @@
     "ability1": "ヨガパワー",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガチャーレム",
+    "new_pokedex_name_eng": "Mega Medicham"
   },
   {
     "id": "0310_00000000_0_000_0",
@@ -1625,7 +1667,9 @@
     "ability1": "いかく",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガライボルト",
+    "new_pokedex_name_eng": "Mega Manectric"
   },
   {
     "id": "0319_00000000_0_000_0",
@@ -1669,7 +1713,9 @@
     "ability1": "がんじょうあご",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガサメハダー",
+    "new_pokedex_name_eng": "Mega Sharpedo"
   },
   {
     "id": "0323_00000000_0_000_0",
@@ -1713,7 +1759,9 @@
     "ability1": "ちからずく",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガバクーダ",
+    "new_pokedex_name_eng": "Mega Camerupt"
   },
   {
     "id": "0324_00000000_0_000_0",
@@ -1779,7 +1827,9 @@
     "ability1": "フェアリースキン",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガチルタリス",
+    "new_pokedex_name_eng": "Mega Altaria"
   },
   {
     "id": "0350_00000000_0_000_0",
@@ -1867,7 +1917,9 @@
     "ability1": "いたずらごころ",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガジュペッタ",
+    "new_pokedex_name_eng": "Mega Banette"
   },
   {
     "id": "0358_00000000_0_000_0",
@@ -1957,7 +2009,9 @@
     "ability1": "マジックミラー",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガアブソル",
+    "new_pokedex_name_eng": "Mega Absol"
   },
   {
     "id": "0362_00000000_0_000_0",
@@ -2001,7 +2055,9 @@
     "ability1": "フリーズスキン",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガオニゴーリ",
+    "new_pokedex_name_eng": "Mega Glalie"
   },
   {
     "id": "0036_00000000_0_000_0",
@@ -2045,7 +2101,9 @@
     "ability1": "マジックミラー",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガピクシー",
+    "new_pokedex_name_eng": "Mega Clefable"
   },
   {
     "id": "0389_00000000_0_000_0",
@@ -2199,7 +2257,9 @@
     "ability1": "あついしぼう",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガフシギバナ",
+    "new_pokedex_name_eng": "Mega Venusaur"
   },
   {
     "id": "0405_00000000_0_000_0",
@@ -2331,7 +2391,9 @@
     "ability1": "きもったま",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガミミロップ",
+    "new_pokedex_name_eng": "Mega Lopunny"
   },
   {
     "id": "0442_00000000_0_000_0",
@@ -2397,7 +2459,9 @@
     "ability1": "すなのちから",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガガブリアス",
+    "new_pokedex_name_eng": "Mega Garchomp"
   },
   {
     "id": "0448_00000000_0_000_0",
@@ -2441,7 +2505,9 @@
     "ability1": "てきおうりょく",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガルカリオ",
+    "new_pokedex_name_eng": "Mega Lucario"
   },
   {
     "id": "0450_00000000_0_000_0",
@@ -2529,7 +2595,9 @@
     "ability1": "ゆきふらし",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガユキノオー",
+    "new_pokedex_name_eng": "Mega Abomasnow"
   },
   {
     "id": "0461_00000000_0_000_0",
@@ -2705,7 +2773,9 @@
     "ability1": "せいしんりょく",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガエルレイド",
+    "new_pokedex_name_eng": "Mega Gallade"
   },
   {
     "id": "0478_00000000_0_000_0",
@@ -2749,7 +2819,9 @@
     "ability1": "ゆきふらし",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガユキメノコ",
+    "new_pokedex_name_eng": "Mega Froslass"
   },
   {
     "id": "0479_00000000_0_000_0",
@@ -2947,7 +3019,9 @@
     "ability1": "かたやぶり",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガエンブオー",
+    "new_pokedex_name_eng": "Mega Emboar"
   },
   {
     "id": "0503_00000000_0_000_0",
@@ -3145,7 +3219,9 @@
     "ability1": "かんつうドリル",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガドリュウズ",
+    "new_pokedex_name_eng": "Mega Excadrill"
   },
   {
     "id": "0531_00000000_0_000_0",
@@ -3189,7 +3265,9 @@
     "ability1": "いやしのこころ",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガタブンネ",
+    "new_pokedex_name_eng": "Mega Audino"
   },
   {
     "id": "0534_00000000_0_000_0",
@@ -3497,7 +3575,9 @@
     "ability1": "すりぬけ",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガシャンデラ",
+    "new_pokedex_name_eng": "Mega Chandelure"
   },
   {
     "id": "0614_00000000_0_000_0",
@@ -3697,7 +3777,9 @@
     "ability1": "ぼうだん",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガブリガロン",
+    "new_pokedex_name_eng": "Mega Chesnaught"
   },
   {
     "id": "0655_00000000_0_000_0",
@@ -3741,7 +3823,9 @@
     "ability1": "ふゆう",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガマフォクシー",
+    "new_pokedex_name_eng": "Mega Delphox"
   },
   {
     "id": "0658_00000000_0_000_0",
@@ -3785,7 +3869,9 @@
     "ability1": "へんげんじざい",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガゲッコウガ",
+    "new_pokedex_name_eng": "Mega Greninja"
   },
   {
     "id": "0065_00000000_0_000_0",
@@ -3829,7 +3915,9 @@
     "ability1": "トレース",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガフーディン",
+    "new_pokedex_name_eng": "Mega Alakazam"
   },
   {
     "id": "0660_00000000_0_000_0",
@@ -4295,7 +4383,9 @@
     "ability1": "かたいツメ",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガリザードンX",
+    "new_pokedex_name_eng": "Mega Charizard X"
   },
   {
     "id": "0006_00000101_0_000_0",
@@ -4317,7 +4407,9 @@
     "ability1": "ひでり",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガリザードンY",
+    "new_pokedex_name_eng": "Mega Charizard Y"
   },
   {
     "id": "0700_00000000_0_000_0",
@@ -4383,7 +4475,9 @@
     "ability1": "ノーガード",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガルチャブル",
+    "new_pokedex_name_eng": "Mega Hawlucha"
   },
   {
     "id": "0702_00000000_0_000_0",
@@ -4691,7 +4785,9 @@
     "ability1": "とびだすなかみ",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガウツボット",
+    "new_pokedex_name_eng": "Mega Victreebel"
   },
   {
     "id": "0724_00000000_0_000_0",
@@ -5133,7 +5229,9 @@
     "ability1": "ぎゃくじょう",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガジジーロン",
+    "new_pokedex_name_eng": "Mega Drampa"
   },
   {
     "id": "0784_00000000_0_000_0",
@@ -5221,7 +5319,9 @@
     "ability1": "シェルアーマー",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガヤドラン",
+    "new_pokedex_name_eng": "Mega Slowbro"
   },
   {
     "id": "0823_00000000_0_000_0",
@@ -5861,7 +5961,9 @@
     "ability1": "かげふみ",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガゲンガー",
+    "new_pokedex_name_eng": "Mega Gengar"
   },
   {
     "id": "0934_00000000_0_000_0",
@@ -5973,6 +6075,8 @@
     "ability1": "メガランチャー",
     "ability2": null,
     "dream_ability": null,
-    "new_pokedex_entry": false
+    "new_pokedex_entry": true,
+    "new_pokedex_name_jpn": "メガカメックス",
+    "new_pokedex_name_eng": "Mega Blastoise"
   }
 ]

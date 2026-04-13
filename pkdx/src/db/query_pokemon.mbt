@@ -17,12 +17,16 @@ pub fn query_pokemon(
     #|  p.weight
     #|FROM pokedex_name pn
     #|JOIN pokedex_name pne ON pn.id = pne.id
+    #|  AND COALESCE(pne.mega_evolution, '') = COALESCE(pn.mega_evolution, '')
     #|  AND pne.language = 'eng'
     #|JOIN local_pokedex_type t ON pn.id = t.id
+    #|  AND COALESCE(t.mega_evolution, '') = COALESCE(pn.mega_evolution, '')
     #|  AND t.version = ?
     #|JOIN local_pokedex_status s ON pn.id = s.id
+    #|  AND COALESCE(s.mega_evolution, '') = COALESCE(pn.mega_evolution, '')
     #|  AND s.version = ?
     #|JOIN local_pokedex_ability a ON pn.id = a.id
+    #|  AND COALESCE(a.mega_evolution, '') = COALESCE(pn.mega_evolution, '')
     #|  AND a.version = ?
     #|JOIN pokedex p ON pn.id = p.id
     #|WHERE COALESCE(pn.form, '') = ''

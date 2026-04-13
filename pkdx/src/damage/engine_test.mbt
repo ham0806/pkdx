@@ -369,6 +369,75 @@ test "calc_damage: おはかまいり clamps fainted_count > 100" {
   inspect(r100.max_damage == r999.max_damage, content="true")
 }
 
+// --- ダブルバトル全体技補正 ---
+
+///|
+test "calc_damage: spread move in double applies 0.75x" {
+  let input = mk_damage_input(
+    fixture_garchomp(),
+    fixture_garchomp(),
+    fixture_earthquake(),
+    is_double=true,
+  )
+  let result = calc_damage(input)
+  // baseline max_damage=84, round5(base, 3072) で 0.75倍
+  inspect(result.max_damage, content="63")
+}
+
+///|
+test "calc_damage: single-target move in double has no spread penalty" {
+  let outrage = mk_move("げきりん", "ドラゴン", @model.Physical, 120)
+  let input = mk_damage_input(
+    fixture_garchomp(),
+    fixture_garchomp(),
+    outrage,
+    is_double=true,
+  )
+  let baseline = mk_damage_input(
+    fixture_garchomp(),
+    fixture_garchomp(),
+    outrage,
+  )
+  let r1 = calc_damage(input)
+  let r2 = calc_damage(baseline)
+  inspect(r1.max_damage == r2.max_damage, content="true")
+}
+
+///|
+test "calc_damage: spread move in single has no penalty" {
+  let input = mk_damage_input(
+    fixture_garchomp(),
+    fixture_garchomp(),
+    fixture_earthquake(),
+    is_double=false,
+  )
+  let result = calc_damage(input)
+  inspect(result.max_damage, content="84")
+}
+
+///|
+test "calc_damage: spread + sand weather in double" {
+  // spread 補正は weather の前に適用される（丸め順序の回帰確認）
+  let input = mk_damage_input(
+    fixture_garchomp(),
+    fixture_garchomp(),
+    fixture_earthquake(),
+    is_double=true,
+    weather=@model.Weather::Sand,
+  )
+  let result = calc_damage(input)
+  // base 56 → round5(56, 3072)=42 → weather(じめん+すなあらし=補正なし) → ...
+  // シングルの sand 結果と比較して spread 分だけ小さいことを確認
+  let single = mk_damage_input(
+    fixture_garchomp(),
+    fixture_garchomp(),
+    fixture_earthquake(),
+    weather=@model.Weather::Sand,
+  )
+  let r_single = calc_damage(single)
+  inspect(result.max_damage < r_single.max_damage, content="true")
+}
+
 // --- そうだいしょう + おはかまいり 併用 ---
 
 ///|

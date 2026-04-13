@@ -253,6 +253,7 @@ fn cmd_damage() -> @admiral.CommandDef {
       @admiral.string("field", description="Terrain (ja): エレキ|グラス|ミスト|サイコ", default=Some("")),
       @admiral.string("tera-type", description="Tera type (ja)", default=Some("")),
       @admiral.bool("critical", description="Treat the hit as a critical"),
+      @admiral.bool("double", description="Double battle (applies 0.75x to spread moves)"),
       @admiral.int("atk-stat", description="Override attacker attack/special stat", default=Some(0)),
       @admiral.int("def-stat", description="Override defender defense/special stat", default=Some(0)),
       @admiral.int("def-hp", description="Override defender HP", default=Some(0)),
@@ -285,6 +286,7 @@ fn cmd_damage() -> @admiral.CommandDef {
         field,
         ctx_str(ctx, "tera-type"),
         ctx.get_bool("critical"),
+        ctx.get_bool("double"),
         ctx_int(ctx, "atk-stat"),
         ctx_int(ctx, "def-stat"),
         ctx_int(ctx, "def-hp"),
@@ -630,6 +632,7 @@ fn run_damage(
   field : @model.Field,
   tera_type : String,
   critical : Bool,
+  is_double : Bool,
   atk_stat : Int,
   def_stat : Int,
   def_hp : Int,
@@ -685,6 +688,7 @@ fn run_damage(
       atk_rank,
       def_rank,
       fainted_count,
+      is_double,
     }
     let result = @damage.calc_damage(input)
     println(@cli.format_damage(result, input, format))

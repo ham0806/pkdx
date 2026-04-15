@@ -199,6 +199,17 @@ echo '{"matrix":[[0,1,-1],[-1,0,1],[1,-1,0]]}' | bin/pkdx nash graph --threshold
 # 選出最適化（team + opponent + format JSON を stdin。macOS/Linux のみ）
 cat team.json | bin/pkdx select
 
+# 選出最適化: pairwise PayoffModel
+# - "best1v1" (デフォルト): 速度＋平均ダメージで一手 KO 比較
+# - "nash_responses": move-vs-move 内部 Nash で技選択をモデル化
+# - "monte_carlo:<trials>:<seed>": seeded RNG でダメージ乱数込み
+echo '{"team":[...],"opponent":[...],"format":"single","payoff_model":"monte_carlo:1000:42"}' | bin/pkdx select
+
+# 選出最適化: team-level TeamPayoffModel (Phase 13 新軸)
+# - "pairwise:<model>": 既存 PayoffModel をラップ ("pairwise:best1v1" 等)
+# - "switching_game:<turn_limit>": 交代込み extensive-form ゲーム木 (先制技 / ランク補正対応)
+echo '{"team":[...],"opponent":[...],"format":"single","team_payoff_model":"switching_game:2"}' | bin/pkdx select
+
 # メタ乖離分析（usage + matrix JSON を stdin）
 echo '{"usage":[0.4,0.3,0.3],"matrix":[[0,1,-1],[-1,0,1],[1,-1,0]]}' | bin/pkdx meta-divergence
 
@@ -212,8 +223,9 @@ bin/pkdx hbd "ガブリアス" --nature ようき --fixed-ev "_,0,_,0,_,252" --v
 
 ## Reference documents
 
-ドメイン理論・設計背景・数式導出など、コードからは読み取れない知識は `.claude/skills/*/references/` に置き、エージェントが質問に自力で回答できるようにする。
+ドメイン理論・設計背景・数式導出など、コードからは読み取れない知識は `.claude/skills/*/references/` に置き、エージェントが質問に自力で回答できるようにする。システム全体のパス / データフロー俯瞰は `.claude/architecture.md` に Mermaid 図で整理されている。
 
+- **`.claude/architecture.md`** — ユーザー入力 → skill → CLI → DB → 出力までの全パスを Mermaid ステートマシン / フローチャートで図示。skill の Phase 遷移、CLI dispatch、DB テーブルアクセス、payoff 内部ゲーム木、データ型の流れ。新機能を足す前にまずここを眺めて全体整合性を確認する。
 - **`.claude/skills/team-builder/references/bulk_theory.md`** — 耐久指数 HBD/(B+D) の導出、H=B+D 則、greedy 勾配法アルゴリズム、11n調整との関係、HP条件の根拠。`hbd` サブコマンドや努力値配分に関する質問はここを第一参照。
 - **`.claude/skills/team-builder/references/champions_sp.md`** — Champions SP システムの全仕様。EV/IV との同値性、+1 優位、性格補正境界、HBD 最適化差分、逆算アルゴリズム。Champions フォーマットのステータス計算に関する質問はここを第一参照。
 - **`.claude/skills/team-builder/references/format_rules.md`** — メガ/ダイマ/Z/テラスタル等のメカニクス定義

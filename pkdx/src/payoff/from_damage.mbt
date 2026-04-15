@@ -21,13 +21,17 @@ fn avg_damage(r : @model.DamageCalcResult) -> Double {
 }
 
 ///|
-/// Build a `DamageCalcInput` with the combatants' abilities/items/tera and no
-/// weather/field/ranks. Used as the canonical reference input for payoff
-/// computation.
-fn build_input(
+/// Build a `DamageCalcInput` with the combatants' abilities/items/tera, the
+/// given attacker/defender ranks, and no weather/field. Used as the canonical
+/// reference input for payoff computation — existing call-sites should use
+/// `build_input` (ranks=0) unless they specifically need rank-aware damage
+/// (`SwitchingGame`'s rank-tracked state).
+fn build_input_with_ranks(
   atk : Combatant,
   dfn : Combatant,
   mv : @model.Move,
+  atk_rank : Int,
+  def_rank : Int,
 ) -> @model.DamageCalcInput {
   {
     attacker: atk.pokemon,
@@ -44,12 +48,22 @@ fn build_input(
     atk_stat_override: 0,
     def_stat_override: 0,
     def_hp_override: 0,
-    atk_rank: 0,
-    def_rank: 0,
+    atk_rank,
+    def_rank,
     fainted_count: 0,
     is_double: false,
     stat_system: atk.stat_system,
   }
+}
+
+///|
+/// Rank-less build_input. Equivalent to `build_input_with_ranks(..., 0, 0)`.
+fn build_input(
+  atk : Combatant,
+  dfn : Combatant,
+  mv : @model.Move,
+) -> @model.DamageCalcInput {
+  build_input_with_ranks(atk, dfn, mv, 0, 0)
 }
 
 ///|
@@ -165,17 +179,26 @@ pub fn nash_responses_winrate(a : Combatant, b : Combatant) -> Double {
 }
 
 ///|
-/// Winrate for `a` vs `b` under the given model, in [0, 1].
+/// Winrate for `a` vs `b` under the given model, in [0, 1]. Move priority
+/// and stat-boost metadata are read directly from each `Move.priority` /
+/// `Move.stat_effects` — populate them via `pkdx moves` before constructing
+/// the combatants.
 pub fn winrate(a : Combatant, b : Combatant, model : PayoffModel) -> Double {
   match model {
     Best1v1 => best1v1_winrate(a, b)
     NashResponses => nash_responses_winrate(a, b)
+    MonteCarloSim(trials, seed) => monte_carlo_winrate(a, b, trials, seed)
   }
 }
 
 ///|
 /// Build the zero-sum payoff matrix `A[i, j] = 2·winrate(i, j) − 1` from a
 /// list of combatants under the given `PayoffModel`.
+///
+/// For `MonteCarloSim` the matrix is built with **upper-triangle estimation
+/// and antisymmetric completion** (`A[j, i] = -A[i, j]`, `A[i, i] = 0`) to
+/// preserve zero-sum property under finite-sample noise. Deterministic models
+/// (`Best1v1`, `NashResponses`) keep the independent per-cell computation.
 pub fn from_combatants(
   combatants : Array[Combatant],
   model : PayoffModel,
@@ -191,12 +214,25 @@ pub fn from_combatants(
   }
   let data = Array::make(n, ([] : Array[Double]))
   for i in 0..<n {
-    let row = Array::make(n, 0.0)
-    for j in 0..<n {
-      let wr = winrate(combatants[i], combatants[j], model)
-      row[j] = 2.0 * wr - 1.0
-    }
-    data[i] = row
+    data[i] = Array::make(n, 0.0)
+  }
+  match model {
+    MonteCarloSim(_, _) =>
+      for i in 0..<n {
+        for j in (i + 1)..<n {
+          let wr = winrate(combatants[i], combatants[j], model)
+          let payoff = 2.0 * wr - 1.0
+          data[i][j] = payoff
+          data[j][i] = -payoff
+        }
+      }
+    _ =>
+      for i in 0..<n {
+        for j in 0..<n {
+          let wr = winrate(combatants[i], combatants[j], model)
+          data[i][j] = 2.0 * wr - 1.0
+        }
+      }
   }
   match @nash.FiniteMatrix::new(data) {
     Ok(m) => m

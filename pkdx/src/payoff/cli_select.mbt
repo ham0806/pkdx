@@ -16,7 +16,8 @@
 ///   "hp":      Int, "atk":  Int, "def": Int,
 ///   "spa":     Int, "spd":  Int, "spe": Int,
 ///   "ability": String, "item": String, "tera": String,
-///   "moves":   [{"name":..., "type":..., "category":"physical"|"special", "power":Int}, ...]
+///   "moves":   [{"name":..., "type":..., "category":"物理"|"特殊"|"変化",
+///                "power":Int, "priority":Int?, "stat_effects":[[Int,Int], ...]?}, ...]
 /// }
 /// ```
 ///
@@ -46,17 +47,20 @@ fn parse_move_json(j : Json, ctx : String) -> @model.Move raise NashCliError {
         None => ""
       }
       let category = match m.get("category") {
-        Some(String(s)) =>
-          match s {
-            "physical" => @model.Physical
-            "special" => @model.Special
-            _ => @model.Physical
-          }
+        Some(String(s)) => @model.category_from_jp(s)
         _ => @model.Physical
       }
       let power = match m.get("power") {
         Some(Number(n, ..)) => n.to_int()
         _ => 0
+      }
+      let priority = match m.get("priority") {
+        Some(Number(n, ..)) => n.to_int()
+        _ => 0
+      }
+      let stat_effects = match m.get("stat_effects") {
+        Some(Array(arr)) => parse_stat_effects_array(arr)
+        _ => []
       }
       {
         name,
@@ -66,10 +70,42 @@ fn parse_move_json(j : Json, ctx : String) -> @model.Move raise NashCliError {
         accuracy: 100,
         pp: 10,
         learn_method: "",
+        priority,
+        stat_effects,
       }
     }
     _ => raise InvalidJson(ctx + " must be an object")
   }
+}
+
+///|
+/// Parse a JSON array of `[stat_index, delta]` pairs. Non-conforming entries
+/// are silently skipped (e.g. wrong arity, non-numeric members); a malformed
+/// JSON that parsed as an Array still yields an empty effect list rather than
+/// raising.
+fn parse_stat_effects_array(arr : Array[Json]) -> Array[(Int, Int)] {
+  let out : Array[(Int, Int)] = []
+  for item in arr {
+    match item {
+      Array(pair) =>
+        if pair.length() == 2 {
+          let a = match pair[0] {
+            Number(n, ..) => Some(n.to_int())
+            _ => None
+          }
+          let b = match pair[1] {
+            Number(n, ..) => Some(n.to_int())
+            _ => None
+          }
+          match (a, b) {
+            (Some(ai), Some(bi)) => out.push((ai, bi))
+            _ => ()
+          }
+        }
+      _ => ()
+    }
+  }
+  out
 }
 
 ///|
@@ -138,6 +174,8 @@ fn parse_combatant_json(
             accuracy: 100,
             pp: 10,
             learn_method: "",
+            priority: 0,
+            stat_effects: [],
           })
           for i in 0..<arr.length() {
             out[i] = parse_move_json(
@@ -223,8 +261,64 @@ fn parse_model(s : String) -> PayoffModel raise NashCliError {
   match s {
     "best1v1" => Best1v1
     "nash_responses" => NashResponses
-    _ => raise InvalidJson("payoff_model must be 'best1v1' or 'nash_responses'")
+    _ =>
+      match s.strip_prefix("monte_carlo:") {
+        Some(rest) => parse_monte_carlo_spec(rest.to_string())
+        None =>
+          raise InvalidJson(
+            "payoff_model must be 'best1v1', 'nash_responses', or 'monte_carlo:<trials>:<seed>'",
+          )
+      }
   }
+}
+
+///|
+fn parse_team_payoff_model(s : String) -> TeamPayoffModel raise NashCliError {
+  match s.strip_prefix("pairwise:") {
+    Some(rest) => Pairwise(parse_model(rest.to_string()))
+    None =>
+      match s.strip_prefix("switching_game:") {
+        Some(rest) => {
+          let turn_limit = try @strconv.parse_int(rest.to_string()) catch {
+            _ =>
+              raise InvalidJson(
+                "switching_game turn_limit must be a positive integer",
+              )
+          }
+          if turn_limit <= 0 {
+            raise InvalidJson(
+              "switching_game turn_limit must be a positive integer",
+            )
+          }
+          SwitchingGame(turn_limit)
+        }
+        None =>
+          raise InvalidJson(
+            "team_payoff_model must be 'pairwise:<model>' or 'switching_game:<turn_limit>'",
+          )
+      }
+  }
+}
+
+///|
+fn parse_monte_carlo_spec(rest : String) -> PayoffModel raise NashCliError {
+  let (trials_str, seed_str) = match rest.split_once(":") {
+    Some((t, s)) => (t.to_string(), s.to_string())
+    None =>
+      raise InvalidJson(
+        "monte_carlo model must be 'monte_carlo:<trials>:<seed>'",
+      )
+  }
+  let trials = try @strconv.parse_int(trials_str) catch {
+    _ => raise InvalidJson("monte_carlo trials must be a positive integer")
+  }
+  if trials <= 0 {
+    raise InvalidJson("monte_carlo trials must be a positive integer")
+  }
+  let seed = try @strconv.parse_uint64(seed_str) catch {
+    _ => raise InvalidJson("monte_carlo seed must be a UInt64 literal")
+  }
+  MonteCarloSim(trials, seed)
 }
 
 ///|
@@ -257,21 +351,26 @@ fn selection_names(
 }
 
 ///|
-/// Compute the selection-level Nash distribution for `team` vs `opponent`.
-pub fn compute_select(
+/// Compute the selection-level Nash distribution for `team` vs `opponent`
+/// under a full `TeamPayoffModel` (Phase 13 entry point).
+pub fn compute_select_with_team_model(
   team : Array[Combatant],
   opponent : Array[Combatant],
   format : BattleFormat,
-  model : PayoffModel,
+  team_model : TeamPayoffModel,
 ) -> SelectResult raise NashCliError {
   let k = match format {
     Single => 3
     Double => 4
   }
   if team.length() < k || opponent.length() < k {
-    raise InvalidJson("team and opponent must each have at least " + k.to_string() + " members")
+    raise InvalidJson(
+      "team and opponent must each have at least " + k.to_string() + " members",
+    )
   }
-  let m = try team_payoff_matrix(team, opponent, format, model) catch {
+  let m = try team_payoff_matrix_with_team_model(
+      team, opponent, format, team_model,
+    ) catch {
     err => raise InnerError(err.to_string())
   }
   let lp = try @nash.solve_zero_sum(m) catch {
@@ -314,6 +413,17 @@ pub fn compute_select(
 }
 
 ///|
+/// Legacy entry: delegate to `compute_select_with_team_model(..., Pairwise(model))`.
+pub fn compute_select(
+  team : Array[Combatant],
+  opponent : Array[Combatant],
+  format : BattleFormat,
+  model : PayoffModel,
+) -> SelectResult raise NashCliError {
+  compute_select_with_team_model(team, opponent, format, Pairwise(model))
+}
+
+///|
 fn fmt_int_2d(xs : Array[Array[Int]]) -> String {
   let mut s = "["
   for i in 0..<xs.length() {
@@ -347,7 +457,10 @@ fn format_label(f : BattleFormat) -> String {
 
 ///|
 /// Run `pkdx select`. Returns a JSON string with the Nash-equilibrium
-/// distribution over k-selections.
+/// distribution over k-selections. Move priority / stat-boost metadata rides
+/// on each move's JSON entry (`priority`, `stat_effects`) — skills should
+/// take the fields straight from `pkdx moves` output, which JOINs
+/// `move_meta` and emits them.
 pub fn run_select(input_json : String) -> String raise NashCliError {
   let root = try @json.parse(input_json) catch {
     err => raise InvalidJson(err.to_string())
@@ -368,12 +481,27 @@ pub fn run_select(input_json : String) -> String raise NashCliError {
     Some(String(s)) => parse_format(s)
     _ => Single
   }
-  let model = match obj.get("payoff_model") {
-    Some(String(s)) => parse_model(s)
-    None => Best1v1
-    _ => raise InvalidJson("payoff_model must be a string")
+  // JSON compatibility: `team_payoff_model` (Phase 13) takes precedence over
+  // the legacy `payoff_model` field. If only `payoff_model` is present it is
+  // wrapped in `Pairwise`. If neither is present the default is `Pairwise(Best1v1)`.
+  let team_model = match obj.get("team_payoff_model") {
+    Some(String(s)) => parse_team_payoff_model(s)
+    Some(_) => raise InvalidJson("team_payoff_model must be a string")
+    None =>
+      match obj.get("payoff_model") {
+        Some(String(s)) => Pairwise(parse_model(s))
+        Some(_) => raise InvalidJson("payoff_model must be a string")
+        None => Pairwise(Best1v1)
+      }
   }
-  let r = compute_select(team, opp, format, model)
+  match (format, team_model) {
+    (Double, SwitchingGame(_)) =>
+      raise InvalidJson(
+        "switching_game does not support double format (single-active model only)",
+      )
+    _ => ()
+  }
+  let r = compute_select_with_team_model(team, opp, format, team_model)
   let mut out = "{"
   out = out + "\"format\":\"" + format_label(r.format) + "\""
   out = out + ",\"value\":" + r.value.to_string()

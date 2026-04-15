@@ -129,17 +129,33 @@ JSON
 
 ### 入力の収集
 
-team (6 体), opponent (6 体), format (single/double), payoff_model (best1v1/nash_responses) を取得する。team は `box/teams/` のキャッシュまたはユーザー直接入力。
+team (6 体), opponent (6 体), format (single/double), payoff_model (pairwise) または team_payoff_model (team-level) を取得する。team は `box/teams/` のキャッシュまたはユーザー直接入力。
+
+#### モデル選択肢
+
+**pairwise (`payoff_model` フィールド)**:
+- `"best1v1"` (デフォルト) — 速くて分かりやすい、技選択は固定
+- `"nash_responses"` — 内部 move-vs-move Nash、技循環をモデル化
+- `"monte_carlo:<trials>:<seed>"` — seeded RNG でダメージ乱数込み (例: `"monte_carlo:1000:42"`)
+
+**team-level (`team_payoff_model` フィールド、Phase 13)**:
+- `"pairwise:<model_string>"` — 上記 pairwise のラッパー (`"pairwise:best1v1"` 等)
+- `"switching_game:<turn_limit>"` — 交代込み extensive-form ゲーム木 (先制技 / ランク補正技に対応)
+
+両方指定された場合は `team_payoff_model` 優先。詳細は `references/payoff_semantics.md`。
 
 ### 実行
 
 ```bash
+# 技の priority / stat_effects は `pkdx moves` の出力にそのまま乗ってくる
+# ので、stdin JSON にはそのままコピペすれば DB 由来の情報が伝わる。
+# 省略した場合はデフォルト (priority=0 / stat_effects=[]) で扱われる。
 cat <<'JSON' | $PKDX select
 {
   "team": [
     {"name":"P0","type1":"ノーマル","type2":"","hp":100,"atk":100,"def":80,"spa":80,"spd":80,"spe":100,
      "ability":"","item":"","tera":"",
-     "moves":[{"name":"のしかかり","type":"ノーマル","category":"physical","power":85}]},
+     "moves":[{"name":"のしかかり","type":"ノーマル","category":"物理","power":85,"priority":0,"stat_effects":[]}]},
     ...
   ],
   "opponent": [...],

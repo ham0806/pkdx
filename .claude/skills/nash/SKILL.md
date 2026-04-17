@@ -23,7 +23,7 @@ PKDX=$REPO_ROOT/bin/pkdx
 | value | 行プレイヤーから見たゲーム値 (期待利得) |
 | exploitability | 現在の戦略 σ に対する最良応答で得られる追加利得。零和で 0 なら σ は Nash 均衡 |
 | support | 確率 > 0 の純戦略 index 集合 |
-| TeamPayoffModel | 利得の作り方 (`switching_game` / `screened_switching_game:<trials>:<seed>:<keep_top>`)。turn_limit は定数 (MC=5, DP=20) |
+| TeamPayoffModel | 利得の作り方 (`switching_game` / `screened_switching_game:<trials>:<seed>:<keep_top>`)。turn_limit 既定は MC=5 / DP=5 (`switching_game:<N>` で個別上書き可) |
 | BattleFormat | `single` = 3 体選出 (20x20) のみ対応 (`double` は現状未サポート) |
 
 詳細はまず `references/` を参照:
@@ -152,10 +152,8 @@ ls box/teams/*.meta.json
 
 #### モデル選択肢 (`team_payoff_model` フィールド)
 
-- `"switching_game"` (既定) — 交代込み extensive-form ゲーム木。DP turn_limit=20 固定 (先制技 / ランク補正技に対応)
-- `"screened_switching_game:<trials>:<seed>:<keep_top>"` — MC で選出行列を screening (rollout turn_limit=5)、下位を quantile cutoff で枝刈り、残存 sub-matrix だけ SwitchingGame DP (turn_limit=20)。例: `"screened_switching_game:1000:42:0.3"`
-
-pairwise 系 (`best1v1` / `nash_responses` / `monte_carlo:*`) および `payoff_model` フィールドは廃止済み。指定すると `InvalidJson`。
+- `"switching_game"` (既定) — 交代込み extensive-form ゲーム木。DP turn_limit=5 既定 (先制技 / ランク補正技に対応)。長期戦評価が必要なら `"switching_game:<N>"` で turn_limit を上書き可
+- `"screened_switching_game:<trials>:<seed>:<keep_top>"` — MC で選出行列を screening (rollout turn_limit=5)、下位を quantile cutoff で枝刈り、残存 sub-matrix だけ SwitchingGame DP (refine turn_limit=5 既定)。例: `"screened_switching_game:1000:42:0.3"`。refine turn_limit を上書きしたいときは `"screened_switching_game:<trials>:<seed>:<keep_top>:<turn_limit>"`
 
 **チューニングガイド (ScreenedSwitchingGame)**:
 
@@ -178,6 +176,29 @@ pairwise 系 (`best1v1` / `nash_responses` / `monte_carlo:*`) および `payoff_
 
 詳細は `references/payoff_semantics.md`。
 
+#### 読みターン数の決定 (AskUserQuestion)
+
+`team_payoff_model` 文字列を構築する直前に、ユーザーに「何ターン先まで読むか」を AskUserQuestion で必ず確認する。選択結果を `switching_game:<N>` / `screened_switching_game:<trials>:<seed>:<keep_top>:<N>` の `<N>` に埋め込む。
+
+| # | 質問 | header | オプション |
+|---|------|--------|-----------|
+| 1 | 何ターン先まで読みますか？ | 読みの深さ | おまかせ（5ターン先まで・通常対戦向け）, じっくり読む（10ターン先まで・積み展開も評価／時間長め）, サクッと（3ターン先まで・パーティ調整中の素早い確認） |
+
+ユーザー視点の言い換え（質問・選択肢に出す表現はこちら、内部で扱う turn_limit 値は次の対応表）:
+
+| ラベル | turn_limit | こう案内する |
+|---|---|---|
+| おまかせ（5ターン先まで） | 5 | 通常の対戦想定。ほとんどの構築・選出で十分な精度 |
+| じっくり読む（10ターン先まで） | 10 | 積み技や全抜き展開、長期戦の見極めに。計算は数倍〜10 倍ほど時間がかかります |
+| サクッと（3ターン先まで） | 3 | パーティを調整しながら大まかな選出傾向だけ早く確認したいとき |
+
+ユーザーが「Other」で任意の正整数を入力した場合はそれを `<N>` に埋め込む。負値・0 は弾く。「ターン」を「先読み」「深さ」と言い換えても OK だが、`turn_limit` / `DP` などの内部用語はユーザー向け文面に出さないこと。
+
+**model 別のエンコード**:
+
+- `switching_game` 選択時 → `"switching_game:<N>"`
+- `screened_switching_game` 選択時 → `"screened_switching_game:<trials>:<seed>:<keep_top>:<N>"` (4 番目のフィールドとして付与)
+
 ### 実行
 
 ```bash
@@ -195,10 +216,12 @@ cat <<'JSON' | $PKDX select
   "opponent": [...],
   "format": "single",
   "stat_system": "champions",
-  "team_payoff_model": "switching_game"
+  "team_payoff_model": "switching_game:<N>"
 }
 JSON
 ```
+
+`<N>` は直前の AskUserQuestion で得た値を埋める (おまかせ=5 / じっくり読む=10 / サクッと=3、Other 入力時はその正整数)。`screened_switching_game` を選んだ場合は `"screened_switching_game:1000:42:0.3:<N>"` のように 4 番目のフィールドとして同じ値を付ける。
 
 出力:
 ```json

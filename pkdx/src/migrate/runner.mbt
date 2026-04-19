@@ -23,8 +23,14 @@ pub(all) struct Report {
 /// the bookkeeping table if missing, then iterates `migrations()` in
 /// declaration order. Each pending migration runs inside a transaction;
 /// success records its name in `pkdx_migrations`, failure rolls back and
-/// propagates the error.
-pub fn run(db_path : String, repo_root : String) -> Result[Report, String] {
+/// propagates the error. When `resync` is true, all bookkeeping rows are
+/// cleared first so every migration re-applies — used to propagate data.json
+/// edits to installs that already applied the owning migration.
+pub fn run(
+  db_path : String,
+  repo_root : String,
+  resync~ : Bool = false,
+) -> Result[Report, String] {
   if not(@db.file_exists(db_path)) {
     return Err(db_path + " not found. Run ./setup.sh first.")
   }
@@ -32,17 +38,38 @@ pub fn run(db_path : String, repo_root : String) -> Result[Report, String] {
     Ok(d) => d
     Err(e) => return Err(e)
   }
-  let result = run_with_db(db, repo_root)
+  let result = run_with_db(db, repo_root, resync)
   @db.close(db)
   result
 }
 
 ///|
-fn run_with_db(db : @db.Db, repo_root : String) -> Result[Report, String] {
+fn run_with_db(
+  db : @db.Db,
+  repo_root : String,
+  resync : Bool,
+) -> Result[Report, String] {
   let create_sql = "CREATE TABLE IF NOT EXISTS pkdx_migrations (name TEXT PRIMARY KEY, applied_at TEXT NOT NULL DEFAULT (datetime('now')))"
   match @db.exec(db, create_sql) {
     Err(e) => return Err(e)
     Ok(_) => ()
+  }
+  if resync {
+    // 各 migration は冪等に実装されている:
+    //   - 001 / 007: UPDATE のみ / read-only 検証
+    //   - 002 / 003 / 004 / 005: 先頭で自身が書き込む Champions / 自己所有
+    //     テーブルを DELETE してから再投入し、UNIQUE 制約が無い表でも
+    //     重複を生まないようにしている
+    //   - 006 / 008 / 010: move_meta (name_ja PRIMARY KEY) に対する
+    //     INSERT OR REPLACE / UPDATE-first upsert
+    // この前提で bookkeeping を空にして全件再適用しても DB は data.json
+    // の現在状態に収束する。新しい migration を追加する際はこの不変条件
+    // (プレーン INSERT で table を育てない) を壊さないこと。
+    match @db.exec(db, "DELETE FROM pkdx_migrations") {
+      Err(e) => return Err(e)
+      Ok(_) => ()
+    }
+    @db.println_progress("  Resync: cleared bookkeeping, re-applying all")
   }
   let all = migrations()
   let mut applied = 0

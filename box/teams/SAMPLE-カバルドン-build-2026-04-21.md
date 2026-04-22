@@ -1,5 +1,6 @@
 ---
-title: "カバルドン軸構築 - 2026-04-21"
+title: "[サンプル] カバルドン軸構築 (pkdx team-builder 出力例)"
+description: "pkdx team-builder が生成する構築記事のサンプル。実際の対戦記録ではなく、記事フォーマット確認用として同梱されています。"
 axis: "カバルドン"
 date: 2026-04-21
 battle_format: singles
@@ -7,13 +8,18 @@ mechanics: "メガシンカ"
 version: champions
 regulation: "M-A"
 members: ["カバルドン", "マンムー", "アーマーガア", "マスカーニャ", "クエスパトラ", "イダイトウ"]
-tags: []
+tags: ["sample"]
 edited: true
 published: true
 generated_by: team-builder
 schema_version: 1
 ---
-# カバルドン軸構築 - 2026-04-21
+# [サンプル] カバルドン軸構築
+
+> **このファイルは pkdx team-builder の出力サンプルです。**
+> fork 直後でも blog の見た目を確認できるよう、初期状態では公開 (`published: true`) しています。実際の対戦データではありません。
+> 自分の構築を運用し始めたら、このサンプルを非公開化するか削除してください。
+> `/blog` スキルで「サンプル記事を非公開にしたい」「サンプル記事を削除したい」と依頼すれば対話的に処理できます。
 
 ## フォーマット
 

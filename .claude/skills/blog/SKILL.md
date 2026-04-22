@@ -208,6 +208,13 @@ done
 ✓ dev server を起動しました
   URL: http://localhost:4321/pkdx/   ← base path /pkdx/ を必ず付けること (ルートは 404)
   編集するたびに自動でブラウザに反映されます (要リロード)
+
+  【Claude Desktop でプレビューを開く】
+  - Preview ペインを開く: Cmd+Shift+P (macOS) / Ctrl+Shift+P (Windows)
+  - または セッションツールバーの「Preview」ドロップダウンから
+  - Preview ペインが開いていれば上記 URL が自動でロードされます
+  - Claude Desktop 以外で確認する場合はブラウザに URL を直接開いてください
+
   Phase G 完了時に停止確認します。
 ```
 

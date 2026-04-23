@@ -572,6 +572,7 @@ fn effective_combatant(c : Combatant, is_mega : Bool) -> Combatant {
         ability2: "",
         dream_ability: "",
         weight: base.weight,
+        forms: [],
       }
       // mega 後は base が変化するため、pre-mega `actual_stats` はそのまま
       // 使えない。`stat_points` + `nature` が残っていれば post-mega base から

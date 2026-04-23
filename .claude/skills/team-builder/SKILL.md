@@ -401,8 +401,6 @@ $PKDX query "<ポケモン名>" --version "<version>" --format json
 
 #### フォーム違いポケモンの扱い
 
-Migration `011_form_name_aliases` により、フォーム別の一意な別名で直接 query できる。
-
 **手順**:
 
 1. ユーザー入力名をそのまま `pkdx query "<名前>" --version "<version>" --format json` に渡す。以下は直接引ける:

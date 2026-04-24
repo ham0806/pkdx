@@ -61,6 +61,28 @@ $PKDX query "<ポケモン名>" --version "<version>" --format json
 # → ability1, ability2, dream_ability フィールドを参照
 ```
 
+#### フォーム違いポケモンの扱い
+
+フォーム違いはタイプ・種族値・特性が全て変わるのでダメージ計算結果が大きく異なる (例: ウォッシュロトム=でんき/みず/特攻105、ヒートロトム=でんき/ほのお、キュウコン（アローラ）=こおり/フェアリー/ゆきがくれ・ゆきふらし)。原種のデータで代用すると火力・耐久・タイプ一致・半減/無効判定が根本から狂うため、フォームは確実に解決してから Phase 2 以降へ進む。
+
+**手順**:
+
+1. ユーザー入力名をそのまま `pkdx query "<名前>" --version "<version>" --format json` に渡す。以下は直接引ける:
+   - 原種名に form 名を接頭/接尾した一意名: `ウォッシュロトム` / `ヒートロトム` / `メガガブリアス` / `メガリザードンX` 等
+   - 合成された一意名: `キュウコン（アローラ）` / `ランドロス（れいじゅう）` / `ガーディ（ヒスイ）` / `バクフーン（ヒスイ）` 等
+   - 英語名: `Wash Rotom` / `Ninetales (Alolan)` 等
+2. **見つからない場合** (`Error: Pokemon not found`) は原種名で再 query し、返り値の `forms[]` を確認:
+   - `forms[]` はその version に実在するフォームの一意名配列。原種引き時のみ列挙され、フォーム直引き時や形態無しの場合は **JSON キーごと省略** される
+   - 例: `pkdx query ロトム --version champions` → `"forms":["ヒートロトム","ウォッシュロトム","フロストロトム","スピンロトム","カットロトム"]`
+   - 例: `pkdx query キュウコン --version scarlet_violet` → `"forms":["キュウコン（アローラ）"]`
+3. ユーザー意図に合う一意名を選び、その名前で再度 query して該当フォームの `type1` / `type2` / `ability1` / `ability2` / `dream_ability` / 種族値を取得
+4. 取得したフォーム別の name / abilities / types / stats を `pkdx damage` の `--attacker` / `--defender` および `--atk-ability` / `--def-ability` に渡す
+
+**注意点**:
+- 戦闘面で base と完全に同じフォーム (トリミアン毛型・ビビヨン模様・フラベベ花色・Unown 文字・マホイップ flavor 等) は `forms[]` に現れない。これらは原種として扱って問題ない (例: 「ハーフトリム」指定は原種 `トリミアン` で計算)
+- 該当 version にそのフォームが実在しない場合は `forms[]` からも除外される (例: Champions にはランドロス（れいじゅう）未収録) — ユーザーにその旨を伝えて別 version を提案する
+- メガシンカも form の一種として `forms[]` に含まれる (`メガガブリアス` 等)。メガ名で query するとメガ進化後の type/ability/stats が得られる
+
 **AskUserQuestion 1**（4問、左右キー選択）:
 
 | # | 質問 | header | オプション |

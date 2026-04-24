@@ -412,6 +412,25 @@ AskUserQuestionで軸ポケモンを聞く:
 $PKDX query "<ポケモン名>" --version "<version>" --format json
 ```
 
+#### フォーム違いポケモンの扱い
+
+**手順**:
+
+1. ユーザー入力名をそのまま `pkdx query "<名前>" --version "<version>" --format json` に渡す。以下は直接引ける:
+   - 原種名に form 名を接頭/接尾した一意名: `ウォッシュロトム` / `ヒートロトム` / `メガガブリアス` / `メガリザードンX` 等
+   - 合成された一意名: `キュウコン（アローラ）` / `ランドロス（れいじゅう）` / `ガーディ（ヒスイ）` / `バクフーン（ヒスイ）` 等
+   - 英語名: `Wash Rotom` / `Ninetales (Alolan)` 等
+2. **見つからない場合** (`Error: Pokemon not found`) は原種名で再 query し、返り値の `forms[]` を確認:
+   - `forms[]` はその version に実在するフォームの一意名配列。原種引き時のみ列挙され、フォーム直引き時や形態無しの場合は **JSON キーごと省略** される
+   - 例: `pkdx query ロトム --version champions` → `"forms":["ヒートロトム","ウォッシュロトム","フロストロトム","スピンロトム","カットロトム"]`
+   - 例: `pkdx query キュウコン --version scarlet_violet` → `"forms":["キュウコン（アローラ）"]`
+3. ユーザー意図に合う一意名を選び、その名前で再度 query して該当フォームの `type1` / `type2` / `ability1` / `ability2` / `dream_ability` / 種族値を取得
+
+**注意点**:
+- 戦闘面で base と完全に同じフォーム (トリミアン毛型・ビビヨン模様・フラベベ花色・Unown 文字・マホイップ flavor 等) は `forms[]` に現れない。これらは原種として扱って問題ない
+- 該当 version にそのフォームが実在しない場合は `forms[]` からも除外される (例: Champions にはランドロス（れいじゅう）未収録)
+- メガシンカも form の一種として `forms[]` に含まれる (`メガガブリアス` 等)。メガ名で query するとメガ進化後の type/ability/stats が得られる
+
 **結果が空の場合**:
 
 - 名前の確認を再度AskUserQuestionで依頼

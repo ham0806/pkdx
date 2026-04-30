@@ -133218,6 +133218,17 @@
     "gigantamax": "",
     "pokedex": "チャンピオンズ",
     "conditions": "基本",
+    "waza": "ばかぢから"
+  },
+  {
+    "id": "0464_00000000_0_000_0",
+    "globalNo": "0464",
+    "form": "",
+    "region": "",
+    "mega_evolution": "",
+    "gigantamax": "",
+    "pokedex": "チャンピオンズ",
+    "conditions": "基本",
     "waza": "ガードシェア"
   },
   {
@@ -133736,17 +133747,6 @@
     "pokedex": "チャンピオンズ",
     "conditions": "基本",
     "waza": "めざめるパワー"
-  },
-  {
-    "id": "0464_00000000_0_000_0",
-    "globalNo": "0464",
-    "form": "",
-    "region": "",
-    "mega_evolution": "",
-    "gigantamax": "",
-    "pokedex": "チャンピオンズ",
-    "conditions": "基本",
-    "waza": "ばかぢから"
   },
   {
     "id": "0464_00000000_0_000_0",

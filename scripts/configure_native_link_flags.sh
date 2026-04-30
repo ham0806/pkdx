@@ -4,15 +4,15 @@ set -euo pipefail
 case "${RUNNER_OS:-$(uname -s)}" in
   Linux)
     FLAGS="-lopenblas -llapack -lm"
-    CFLAGS=""
+    STUB_CFLAGS=""
     ;;
   macOS | Darwin)
     FLAGS="-framework Accelerate"
-    CFLAGS=""
+    STUB_CFLAGS=""
     ;;
   Windows | MINGW* | MSYS* | CYGWIN*)
     FLAGS="-LC:/vcpkg/installed/x64-mingw-dynamic/lib -lopenblas"
-    CFLAGS="-IC:/vcpkg/installed/x64-mingw-dynamic/include -IC:/vcpkg/installed/x64-mingw-dynamic/include/openblas"
+    STUB_CFLAGS="-IC:/vcpkg/installed/x64-mingw-dynamic/include -IC:/vcpkg/installed/x64-mingw-dynamic/include/openblas"
     ;;
   *)
     echo "unsupported runner OS: ${RUNNER_OS:-$(uname -s)}" >&2
@@ -29,11 +29,11 @@ for pkg in \
 do
   if [ -f "$pkg" ]; then
     sed -i.bak "s|\"cc-link-flags\": \"[^\"]*\"|\"cc-link-flags\": \"$FLAGS\"|g" "$pkg"
-    if [ -n "$CFLAGS" ]; then
-      if grep -q '"cc-flags":' "$pkg"; then
-        sed -i.bak "s|\"cc-flags\": \"[^\"]*\"|\"cc-flags\": \"$CFLAGS\"|g" "$pkg"
+    if [ -n "$STUB_CFLAGS" ]; then
+      if grep -q '"stub-cc-flags":' "$pkg"; then
+        sed -i.bak "s|\"stub-cc-flags\": \"[^\"]*\"|\"stub-cc-flags\": \"$STUB_CFLAGS\"|g" "$pkg"
       else
-        sed -i.bak "s|\"cc-link-flags\": \"$FLAGS\"|\"cc-link-flags\": \"$FLAGS\", \"cc-flags\": \"$CFLAGS\"|g" "$pkg"
+        sed -i.bak "s|\"cc-link-flags\": \"$FLAGS\"|\"cc-link-flags\": \"$FLAGS\", \"stub-cc-flags\": \"$STUB_CFLAGS\"|g" "$pkg"
       fi
     fi
     rm -f "$pkg.bak"
@@ -41,6 +41,6 @@ do
 done
 
 echo "configured native cc-link-flags: $FLAGS"
-if [ -n "$CFLAGS" ]; then
-  echo "configured native cc-flags: $CFLAGS"
+if [ -n "$STUB_CFLAGS" ]; then
+  echo "configured native stub-cc-flags: $STUB_CFLAGS"
 fi

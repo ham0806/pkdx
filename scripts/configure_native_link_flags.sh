@@ -11,8 +11,8 @@ case "${RUNNER_OS:-$(uname -s)}" in
     STUB_CFLAGS=""
     ;;
   Windows | MINGW* | MSYS* | CYGWIN*)
-    FLAGS="-LC:/vcpkg/installed/x64-mingw-dynamic/lib -lopenblas"
-    STUB_CFLAGS="-IC:/vcpkg/installed/x64-mingw-dynamic/include -IC:/vcpkg/installed/x64-mingw-dynamic/include/openblas"
+    FLAGS="-LC:/msys64/mingw64/lib -lopenblas"
+    STUB_CFLAGS="-IC:/msys64/mingw64/include -IC:/msys64/mingw64/include/openblas"
     ;;
   *)
     echo "unsupported runner OS: ${RUNNER_OS:-$(uname -s)}" >&2

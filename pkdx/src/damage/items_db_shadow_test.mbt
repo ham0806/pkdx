@@ -9,7 +9,7 @@ fn ish_open_seeded_db() -> @db.Db? {
   // Spin up a fresh in-process champions.db, build the items / item_effect
   // schema, and seed the 3 MVP rows. Returning None lets the test skip
   // when the FFI / file-system setup is unavailable (rare).
-  let path = "/tmp/pkdx_items_shadow_test.db"
+  let path = "pkdx_items_shadow_test.db"
   let _ = @db.unlink_file(path)
   match @db.open_rwc(path) {
     Err(_) => None

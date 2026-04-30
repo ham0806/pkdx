@@ -99,18 +99,16 @@ jobs:
 
       - name: Build
         working-directory: pkdx
-        env:
-          MOON_CC_LINK_FLAGS: ${{ runner.os == 'Linux' && '-lopenblas -llapack -lm' || (runner.os == 'macOS' && '-framework Accelerate' || (runner.os == 'Windows' && '-LC:/vcpkg/installed/x64-mingw-dynamic/lib -lopenblas' || '')) }}
         run: |
           moon update
+          bash ../scripts/configure_native_link_flags.sh
           moon build --target native src/main
         shell: bash
 
       - name: Test
         working-directory: pkdx
-        env:
-          MOON_CC_LINK_FLAGS: ${{ runner.os == 'Linux' && '-lopenblas -llapack -lm' || (runner.os == 'macOS' && '-framework Accelerate' || (runner.os == 'Windows' && '-LC:/vcpkg/installed/x64-mingw-dynamic/lib -lopenblas' || '')) }}
         run: |
+          bash ../scripts/configure_native_link_flags.sh
           moon test --target native
         shell: bash
 

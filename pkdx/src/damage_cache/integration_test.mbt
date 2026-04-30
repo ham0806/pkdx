@@ -11,7 +11,7 @@
 
 ///|
 fn int_test_path(name : String) -> String {
-  "/tmp/pkdx_damage_cache_int_" + name + ".sqlite"
+  "pkdx_damage_cache_int_" + name + ".sqlite"
 }
 
 ///|

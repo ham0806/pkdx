@@ -1,7 +1,8 @@
 ///|
-/// Unique test file under /tmp so tests don't collide with any live cache.
+/// Unique test file in the test working directory so native Windows runs do
+/// not depend on POSIX-style `/tmp` path handling.
 fn test_path(name : String) -> String {
-  "/tmp/pkdx_damage_cache_test_" + name + ".sqlite"
+  "pkdx_damage_cache_test_" + name + ".sqlite"
 }
 
 ///|

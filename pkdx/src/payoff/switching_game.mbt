@@ -252,6 +252,252 @@ pub fn maybe_apply_status_fanout(
 }
 
 ///|
+/// Contact-proc chance node (#93 / P4): when the attacker hits the
+/// defender with a contact move, the defender's ability or held item
+/// can inflict a status on the attacker. Mirrors the
+/// `maybe_apply_status_fanout` shape so `compose_fanouts` can append
+/// it as another `Array[(prob, state)]` step.
+///
+/// MVP scope:
+///   - abilities: ほのおのからだ / せいでんき / どくしゅ / ほうし
+///     (status procs at 30%, see `damage.contact_proc_ability`)
+///   - items: とびだすハバネロ / とびだすなかみ (100% procs)
+///   - recoil-style abilities (てつのトゲ / さめはだ) are deterministic
+///     HP shaves, modelled in damage application rather than as a
+///     chance node, and stay out of this fanout.
+///
+/// `attacker_is_me` says which side just attacked; the inflicted
+/// status lands on that side. `defender_team` is the side whose
+/// ability / item triggers, `attacker_team` is consulted for type
+/// immunity (electric immune to paralysis, fire immune to burn, etc).
+///
+/// 多段技 (#100): 各 contact 着弾は独立に判定し、1 hit 内では ability proc →
+/// item proc の順に逐次解決する (Showdown / Gen9 仕様)。
+/// q_a = 1 - viable_ability_chance/100、q_i = 1 - viable_item_chance/100、
+/// 1 hit あたりの kind k 設定確率 p_set_k = a_k/100 + q_a × i_k/100。
+/// hit_dist で q_total^n = (q_a × q_i)^n を畳んで終端 no-status 確率を求める。
+/// ability + item を 1 つの categorical roll に flatten すると、せいでんき
+/// (paralyze 30%) + とびだすハバネロ (burn 100%) のような異 kind 合算で
+/// 30/130 vs 100/130 という、どちらの解決順でも再現できない不可能な分布が
+/// 出る (合算 130% を 100 に cap してしまうため)。逐次モデルでは ability 先行
+/// で 30% para + 70% burn が正しい。
+/// シェルアームズ 物理モード等の動的 contact (force_contact) も damage engine
+/// と同じ `resolve_stat_resolution` 経由で判定する。
+/// 加えて mega 後の ability/stats を反映する: `effective_combatant` を
+/// 通すことで Mega Kangaskhan の おやこあい (Parental Bond で 2-hit 化) や
+/// Mega Heracross の スキルリンク (Random2to5 → 5-hit) が contact proc 計算
+/// にも乗る。
+pub fn apply_contact_proc_fanout(
+  state : SwitchingGameState,
+  attacker_is_me : Bool,
+  attacker_slot : Int,
+  defender_slot : Int,
+  attacker_team : Array[Combatant],
+  defender_team : Array[Combatant],
+  mv : @model.Move,
+) -> Array[(Double, SwitchingGameState)] {
+  // mega 後の ability/stats を damage 計算側と同じ経路で解決する。
+  // raw team の ability を読むと Mega Kangaskhan の おやこあい や
+  // Mega Heracross の スキルリンク が反映されず、hit 分布が damage と
+  // ズレてしまう。
+  let atk_megaed = if attacker_is_me {
+    state.my_megaed[attacker_slot]
+  } else {
+    state.opp_megaed[attacker_slot]
+  }
+  let def_megaed = if attacker_is_me {
+    state.opp_megaed[defender_slot]
+  } else {
+    state.my_megaed[defender_slot]
+  }
+  let attacker = effective_combatant(attacker_team[attacker_slot], atk_megaed)
+  let defender = effective_combatant(defender_team[defender_slot], def_megaed)
+  // 動的 contact (シェルアームズ) を engine と同じ判定で解決する。
+  let sr = @damage.resolve_stat_resolution(
+    mv,
+    atk_atk=attacker.pokemon.atk,
+    atk_spa=attacker.pokemon.spa,
+    def_def=defender.pokemon.def_,
+    def_spd=defender.pokemon.spd,
+    atk_ability=attacker.ability,
+    def_ability=defender.ability,
+    critical=false,
+  )
+  if not(@damage.resolve_move_contact(mv, sr.force_contact)) {
+    return [(1.0, state)]
+  }
+  // move 自体が連結しないケース (type immunity / ability immunity) は
+  // contact proc を起こさない。Showdown / Gen9 では「damage が解決された hit」
+  // のみが contact proc trigger になるため、たいあたり (ノーマル) を ほのおの
+  // からだ 持ちゴーストに当てても やけど branch を生んではならない。damage
+  // engine 側の immunity 判定 (engine.mbt の check_def_immunity / 18x18 type
+  // chart) と同じ条件をここでも踏み、payoff が虚偽の status branch で揺れる
+  // のを防ぐ。
+  // 動的タイプ書き換え (フェアリースキン等の Skin / Weather Ball) を engine と
+  // 同じ経路で解決する。raw `mv.type_` で immunity を判定すると、たとえば
+  // フェアリースキン + たいあたり (raw Normal, effective Fairy) を ゴースト
+  // 防御に当てたとき engine は damage を解決するのに fanout 側だけ Normal × Ghost
+  // で immune 扱いし burn branch を落としてしまう。逆に エレキスキン contact 技 →
+  // ひらいしん 防御は engine が ability immunity で 0 ダメージを返すのに、raw
+  // Normal では check_def_immunity が false を返すため、虚偽の proc branch が
+  // 出る。payoff の weather は build_input_with_ranks と同じく None 固定。
+  let resolved_move_type = @damage.resolve_effective_move_type(
+    mv, @model.Weather::None, attacker.ability,
+  )
+  if @damage.check_def_immunity(defender.ability, resolved_move_type) {
+    return [(1.0, state)]
+  }
+  match @types.type_from_jp(resolved_move_type) {
+    Some(at) =>
+      match @types.type_from_jp(defender.pokemon.type1) {
+        Some(d1) => {
+          let e1 = @types.get_effectiveness_x4(at, d1)
+          let e2 = if defender.pokemon.type2.length() > 0 {
+            match @types.type_from_jp(defender.pokemon.type2) {
+              Some(d2) => @types.get_effectiveness_x4(at, d2)
+              None => 4
+            }
+          } else {
+            4
+          }
+          if e1 == 0 || e2 == 0 {
+            return [(1.0, state)]
+          }
+        }
+        None => ()
+      }
+    None => ()
+  }
+  // 各 hit 内で defender の ability proc → item proc の順に独立判定する
+  // (Showdown / Gen9 仕様)。両者を一つの categorical roll に畳むと
+  // mathematically invalid: せいでんき (paralyze 30%) + とびだすハバネロ
+  // (burn 100%) では能力先行で 30% para + 70% burn になるが、合算 130%
+  // モデルでは 30/130 vs 100/130 が出てしまい、どの順でも再現できない。
+  // q_a = 1 - viable_ability_chance/100、q_i = 1 - viable_item_chance/100。
+  // 1 hit あたりの kind k 設定確率 = a_k/100 + q_a × i_k/100。
+  let ability_procs = @damage.contact_proc_ability(defender.ability)
+  let item_procs = @damage.contact_proc_item(defender.item)
+  if ability_procs.length() == 0 && item_procs.length() == 0 {
+    return [(1.0, state)]
+  }
+  let attacker_hps = if attacker_is_me { state.my_hps } else { state.opp_hps }
+  if attacker_hps[attacker_slot] <= 0 {
+    return [(1.0, state)]
+  }
+  let attacker_status = if attacker_is_me {
+    state.my_status
+  } else {
+    state.opp_status
+  }
+  if attacker_status[attacker_slot] != @model.None {
+    return [(1.0, state)]
+  }
+  // viable proc のみ採用 (タイプ耐性で fizzle した proc は status を残さない
+  // ので q への寄与もしない)。
+  let viable_ability : Array[(@model.StatusKind, Int)] = []
+  let mut viable_ability_chance = 0
+  for i = 0; i < ability_procs.length(); i = i + 1 {
+    let (kind, chance) = ability_procs[i]
+    if chance <= 0 {
+      continue
+    }
+    if @model.immune_to_status(
+      kind, attacker.pokemon.type1, attacker.pokemon.type2,
+    ) {
+      continue
+    }
+    viable_ability_chance = viable_ability_chance + chance
+    viable_ability.push((kind, chance))
+  }
+  let viable_item : Array[(@model.StatusKind, Int)] = []
+  let mut viable_item_chance = 0
+  for i = 0; i < item_procs.length(); i = i + 1 {
+    let (kind, chance) = item_procs[i]
+    if chance <= 0 {
+      continue
+    }
+    if @model.immune_to_status(
+      kind, attacker.pokemon.type1, attacker.pokemon.type2,
+    ) {
+      continue
+    }
+    viable_item_chance = viable_item_chance + chance
+    viable_item.push((kind, chance))
+  }
+  if viable_ability.length() == 0 && viable_item.length() == 0 {
+    return [(1.0, state)]
+  }
+  // 各 source は単発の roll なので 100% に cap。current data では既に <=100 だが、
+  // 将来データ拡張 (proc 同士の合算や cap 越え item 追加) で破綻しないよう保険。
+  let cap_a = if viable_ability_chance > 100 { 100 } else { viable_ability_chance }
+  let cap_i = if viable_item_chance > 100 { 100 } else { viable_item_chance }
+  let q_a = 1.0 - cap_a.to_double() / 100.0
+  let q_i = 1.0 - cap_i.to_double() / 100.0
+  let q_total = q_a * q_i
+  // kind ごとの per-hit 設定確率 = a_k/100 + q_a × i_k/100。
+  // ability エントリを先に積んでから item エントリを順次合流させ、ability 側の
+  // 既存 kind には q_a × i_k を加算、新規 kind は q_a × i_k で push。
+  // 同じ kind を持つ ability + item (せいでんき + とびだすなかみ) はここで
+  // 1 エントリに畳まれ、leaf 数増を防ぐ。
+  let combined : Array[(@model.StatusKind, Double)] = []
+  for i = 0; i < viable_ability.length(); i = i + 1 {
+    let (kind, chance) = viable_ability[i]
+    combined.push((kind, chance.to_double() / 100.0))
+  }
+  for i = 0; i < viable_item.length(); i = i + 1 {
+    let (kind, chance) = viable_item[i]
+    let item_contrib = q_a * chance.to_double() / 100.0
+    let mut merged = false
+    for j = 0; j < combined.length(); j = j + 1 {
+      let (kind_j, set_j) = combined[j]
+      if kind_j == kind {
+        combined[j] = (kind_j, set_j + item_contrib)
+        merged = true
+        break
+      }
+    }
+    if not(merged) {
+      combined.push((kind, item_contrib))
+    }
+  }
+  // hit_dist で q_total^n を畳んで no-status 確率を期待値で得る。
+  let hit_dist = @damage.resolve_hit_distribution(mv, attacker.ability)
+  let mut expected_no_status = 0.0
+  for i = 0; i < hit_dist.length(); i = i + 1 {
+    let (n, prob) = hit_dist[i]
+    let mut qn = 1.0
+    for _k = 0; _k < n; _k = _k + 1 {
+      qn = qn * q_total
+    }
+    expected_no_status = expected_no_status + prob * qn
+  }
+  let p_set = 1.0 - expected_no_status
+  if p_set <= 1.0e-12 {
+    return [(1.0, state)]
+  }
+  // 100% proc 確定 (per-hit q_total = 0 で 1 hit 以上) + 単一 viable kind なら 1 leaf。
+  if expected_no_status <= 1.0e-12 && combined.length() == 1 {
+    let (kind, _) = combined[0]
+    return [(1.0, with_status_set(state, attacker_is_me, attacker_slot, kind))]
+  }
+  // 各 kind の最終発火確率: p_set × per_hit_set_k / (1 - q_total)。
+  // per_hit_set の合計は 1 - q_total に等しいので、これは「proc が起きた」
+  // 条件下の kind 分布で按分しているのと同値 (Markov 終端分布)。
+  let denom = 1.0 - q_total
+  let outcomes : Array[(Double, SwitchingGameState)] = []
+  outcomes.push((expected_no_status, state))
+  for i = 0; i < combined.length(); i = i + 1 {
+    let (kind, per_hit_set) = combined[i]
+    let mass = p_set * per_hit_set / denom
+    outcomes.push((
+      mass,
+      with_status_set(state, attacker_is_me, attacker_slot, kind),
+    ))
+  }
+  outcomes
+}
+
+///|
 /// Copy `state` and set `target_slot`'s status on the chosen side to the
 /// freshly-inflicted `StatusCondition` for `kind` (via `inflict_status`).
 fn with_status_set(
@@ -1315,13 +1561,27 @@ fn resolve_attacker_leg(
     attacker_must_recharge, attacker_move, dmg,
   )
   let post_damage_state = ws_to_state(ws, bump_turn=false)
-  maybe_apply_status_fanout(
-    post_damage_state,
-    not(attacker_is_me),
-    target_active(post_damage_state, not(attacker_is_me)),
-    if attacker_is_me { opp_team } else { my_team },
-    attacker_move,
-  )
+  let target_is_me = not(attacker_is_me)
+  let target_slot = target_active(post_damage_state, target_is_me)
+  let target_team = if attacker_is_me { opp_team } else { my_team }
+  let attacker_team = if attacker_is_me { my_team } else { opp_team }
+  let attacker_slot = target_active(post_damage_state, attacker_is_me)
+  compose_fanouts(post_damage_state, [
+    fn(s) {
+      maybe_apply_status_fanout(
+        s, target_is_me, target_slot, target_team, attacker_move,
+      )
+    },
+    // P4 (#93): defender's contact-proc ability/item can inflict status
+    // on attacker. Step is no-op for non-contact moves and for
+    // defenders without proc ability/item.
+    fn(s) {
+      apply_contact_proc_fanout(
+        s, attacker_is_me, attacker_slot, target_slot, attacker_team,
+        target_team, attacker_move,
+      )
+    },
+  ])
 }
 
 ///|
@@ -1698,14 +1958,25 @@ pub fn transition_with_cache(
   }
   match attack_event {
     None => [(1.0, base_state)]
-    Some((attacker_is_me, target_slot, used_move)) =>
-      maybe_apply_status_fanout(
-        base_state,
-        not(attacker_is_me),
-        target_slot,
-        if attacker_is_me { opp_team } else { my_team },
-        used_move,
-      )
+    Some((attacker_is_me, target_slot, used_move)) => {
+      let target_is_me = not(attacker_is_me)
+      let target_team = if attacker_is_me { opp_team } else { my_team }
+      let attacker_team = if attacker_is_me { my_team } else { opp_team }
+      let attacker_slot = target_active(base_state, attacker_is_me)
+      compose_fanouts(base_state, [
+        fn(s) {
+          maybe_apply_status_fanout(
+            s, target_is_me, target_slot, target_team, used_move,
+          )
+        },
+        fn(s) {
+          apply_contact_proc_fanout(
+            s, attacker_is_me, attacker_slot, target_slot, attacker_team,
+            target_team, used_move,
+          )
+        },
+      ])
+    }
   }
 }
 
@@ -2018,14 +2289,25 @@ fn partial_act_outcomes(
   }
   match attack_event {
     None => [(1.0, base_state)]
-    Some((attacker_is_me, target_slot, used_move)) =>
-      maybe_apply_status_fanout(
-        base_state,
-        not(attacker_is_me),
-        target_slot,
-        if attacker_is_me { opp_team } else { my_team },
-        used_move,
-      )
+    Some((attacker_is_me, target_slot, used_move)) => {
+      let target_is_me = not(attacker_is_me)
+      let target_team = if attacker_is_me { opp_team } else { my_team }
+      let attacker_team = if attacker_is_me { my_team } else { opp_team }
+      let attacker_slot = target_active(base_state, attacker_is_me)
+      compose_fanouts(base_state, [
+        fn(s) {
+          maybe_apply_status_fanout(
+            s, target_is_me, target_slot, target_team, used_move,
+          )
+        },
+        fn(s) {
+          apply_contact_proc_fanout(
+            s, attacker_is_me, attacker_slot, target_slot, attacker_team,
+            target_team, used_move,
+          )
+        },
+      ])
+    }
   }
 }
 

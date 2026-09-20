@@ -7,6 +7,17 @@ on:
   # to exercise the Windows MSYS2/OpenBLAS toolchain before tagging a release.
   # The release job is gated to tag pushes so manual runs only build & test.
   workflow_dispatch:
+    inputs:
+      target:
+        description: "手動実行するビルド対象"
+        required: true
+        default: linux-x86_64
+        type: choice
+        options:
+          - linux-x86_64
+          - windows-x86_64
+          - darwin-arm64
+          - all
 
 permissions:
   contents: write
@@ -14,19 +25,21 @@ permissions:
 jobs:
   build:
     strategy:
-      matrix:
-        include:
-          - os: macos-14
-            target: darwin-arm64
-            binary: pkdx-darwin-arm64
-          - os: ubuntu-22.04
-            target: linux-x86_64
-            binary: pkdx-linux-x86_64
-          - os: windows-2022
-            target: windows-x86_64
-            binary: pkdx-windows-x86_64.exe
+      matrix: >-
+        ${{ fromJSON(
+          github.event_name == 'push' &&
+            '{"include":[{"os":"macos-14","target":"darwin-arm64","binary":"pkdx-darwin-arm64"},{"os":"ubuntu-22.04","target":"linux-x86_64","binary":"pkdx-linux-x86_64"},{"os":"windows-2022","target":"windows-x86_64","binary":"pkdx-windows-x86_64.exe"}]}'
+          || github.event.inputs.target == 'all' &&
+            '{"include":[{"os":"macos-14","target":"darwin-arm64","binary":"pkdx-darwin-arm64"},{"os":"ubuntu-22.04","target":"linux-x86_64","binary":"pkdx-linux-x86_64"},{"os":"windows-2022","target":"windows-x86_64","binary":"pkdx-windows-x86_64.exe"}]}'
+          || github.event.inputs.target == 'darwin-arm64' &&
+            '{"include":[{"os":"macos-14","target":"darwin-arm64","binary":"pkdx-darwin-arm64"}]}'
+          || github.event.inputs.target == 'windows-x86_64' &&
+            '{"include":[{"os":"windows-2022","target":"windows-x86_64","binary":"pkdx-windows-x86_64.exe"}]}'
+          || '{"include":[{"os":"ubuntu-22.04","target":"linux-x86_64","binary":"pkdx-linux-x86_64"}]}'
+        ) }}
 
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -143,6 +156,7 @@ jobs:
     # does not silently re-publish.
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 

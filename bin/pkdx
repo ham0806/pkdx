@@ -50,7 +50,10 @@ if command -v gh &>/dev/null; then
   gh release download "$VERSION" --repo "$REPO" --pattern "$BINARY_NAME" --dir "$CACHE_DIR" 2>/dev/null || true
 elif command -v curl &>/dev/null; then
   URL="https://github.com/$REPO/releases/$VERSION/download/$BINARY_NAME"
-  curl -sL "$URL" -o "$BINARY" 2>/dev/null || true
+  if ! curl -sfL "$URL" -o "$BINARY" 2>/dev/null; then
+    rm -f "$BINARY"
+    echo "Failed to download $BINARY_NAME from $URL" >&2
+  fi
 fi
 
 if [ -f "$BINARY" ]; then

@@ -19,6 +19,7 @@ pkdx_patch/012_items/data.json
 .mooncakes/
 _build/
 target/
+src/payoff/moon.pkg.makebak
 
 # SQLite test artifacts (pkdx_items_shadow_test.db / pkdx_empty_champions_test.db 等)
 pkdx_*_test.db

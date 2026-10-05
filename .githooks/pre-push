@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Optional pre-push hook: run the full local test suite before pushing.
+# Enable with:
+#   git config core.hooksPath .githooks
+#
+# Runs `make test` (MoonBit native tests + site checks). This can take a few
+# minutes on the first run (dependency install + native build). Skip once with
+# `git push --no-verify` when needed.
+set -euo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+
+if ! command -v make >/dev/null 2>&1; then
+  echo "pre-push: 'make' not found; skipping tests" >&2
+  exit 0
+fi
+
+exec make test

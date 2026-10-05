@@ -19,6 +19,11 @@ on:
           - darwin-arm64
           - all
 
+# 同一 ref への連続 dispatch / タグの打ち直しで古い実行をキャンセル
+concurrency:
+  group: build-pkdx-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 

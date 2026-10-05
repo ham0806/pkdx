@@ -144,6 +144,27 @@ bin/pkdx type-chart "ほのお" "くさ"   # タイプ相性
 bin/pkdx coverage "じめん,こおり"     # 攻撃範囲の確認
 ```
 
+## 開発者向け: ローカルでのテスト実行
+
+CI (GitHub Actions) は Actions 使用量削減のため最小化してあり、PR 時の自動テストは行わない。push 前にローカルで以下を実行する。
+
+```bash
+make test    # フルチェック: MoonBit native テスト + site (bun test / astro check / smoke)
+make check   # コンパイル確認のみ (moon build + astro check、テストは実行しない)
+```
+
+前提ツール:
+
+- **MoonBit ツールチェーン** (`moon`): `curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash`
+- **Bun** (`site/` のテスト用): `bash scripts/install_bun.sh` または公式手順
+- **BLAS/LAPACK** (Linux で `moon test` を実行する場合のみ): `sudo apt-get install libopenblas-dev liblapack-dev` (Fedora: `sudo dnf install openblas-devel lapack-devel`)。macOS / Windows の詳細は `./setup.sh` の step 2.7 出力を参照
+
+任意で、push 前に `make test` を自動実行する pre-push フックを有効化できる:
+
+```bash
+git config core.hooksPath .githooks
+```
+
 ## 対応環境
 
 macOS (Apple Silicon) / Linux (x86_64) / Windows (WSL2)

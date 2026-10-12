@@ -23,3 +23,19 @@ src/payoff/moon.pkg.makebak
 
 # SQLite test artifacts (pkdx_items_shadow_test.db / pkdx_empty_champions_test.db 等)
 pkdx_*_test.db
+
+# Secrets (added by security setup)
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+id_ecdsa
+client_secret*.json
+service-account*.json
